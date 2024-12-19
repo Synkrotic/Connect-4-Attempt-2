@@ -11,6 +11,7 @@ class AIPlayer:
 
     def update(self) -> None:
         coords: tuple[int, int] = self.getBestMove(self.ID)
+        # self.lookInFuture(self.ID, self.game.board, 1)
 
         self.game.board.setItemAt(self.ID, coords)
         self.game.turn = not self.game.turn
@@ -36,22 +37,24 @@ class AIPlayer:
         return -1
 
 
-    # def lookInFuture(self, playerID: int, board: Board, turns: int) -> tuple[int, int]:
-    #     if turns == 0: return self.getBestMove(playerID)
+    def lookInFuture(self, playerID: int, board: Board, depth: int) -> tuple[int, int]:
+        if depth == 0: return self.getBestMove(playerID)
 
-    #     for x in range(self.board.columns):
-    #         canAIWin: int = self.canPlayerWin(playerID, board)
-    #         canUserWin: int = self.canPlayerWin(self.getOtherUser(playerID), board)
+        aiBestMove: tuple[int, int] = self.getBestMove(playerID, board)
 
-    #         if canAIWin != -1: return (canAIWin, board.getLowestYInColumn(canAIWin))
-    #         if canUserWin != -1: return (canUserWin, board.getLowestYInColumn(canUserWin))
+        
 
-            
+    def getMoveScore(self, playerID: int, x: int, board: Board) -> int:
+        boardScore: int = board.getBoardScore()
 
-    #         self.lookInFuture(self.getOtherUser(playerID), boardCopy, turns - 1)
+        boardCopy: Board = board.copy()
+        boardCopy.setItemAt(playerID, (x, boardCopy.getLowestYInColumn(x)))
+        boardCopyScore: int = boardCopy.getBoardScore()
+
+        return boardCopyScore - boardScore
 
 
-    def getBestMove(self, playerID: int) -> tuple[int, int]:
+    def getBestMove(self, playerID: int, board: Board) -> tuple[int, int]:
         """Returns the best move for the AI."""
         scores: list[int] = []
         otherWin: int = self.canPlayerWin(self.getOtherUser(playerID), self.game.board)
@@ -61,6 +64,8 @@ class AIPlayer:
             board: Board = self.game.board.copy()
             coords: tuple[int, int] = (i, board.getLowestYInColumn(i))
             board.setItemAt(playerID, coords)
+            board.draw(self.game.screen)
+            pg.image.save(self.game.screen, f"board{i}.png")
 
             if board.checkWin(): return coords
             
